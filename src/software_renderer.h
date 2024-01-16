@@ -36,7 +36,7 @@ class SoftwareRenderer : public SVGRenderer {
 
   // Set sample rate
   virtual void set_sample_rate( size_t sample_rate ) = 0;
-  
+
   // Set pixel buffer
   virtual void set_pixel_buffer( unsigned char* pixel_buffer,
                                   size_t width, size_t height ) = 0;
@@ -62,7 +62,7 @@ class SoftwareRenderer : public SVGRenderer {
   size_t sample_rate;
 
   // Pixel buffer memory location
-  unsigned char* pixel_buffer; 
+  unsigned char* pixel_buffer;
 
   // Pixel buffer dimension (in pixels)
   size_t width; size_t height;
@@ -128,6 +128,8 @@ private:
 	// Draw a group
 	void draw_group(Group& group);
 
+	void bline(unsigned x1, unsigned y1,
+          unsigned x2, unsigned y2, Color color);
 	// Rasterization //
 
 	// rasterize a point

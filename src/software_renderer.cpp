@@ -76,7 +76,7 @@ void SoftwareRendererImp::draw_svg( SVG& svg ) {
 
 void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
 
-  // Task 2: 
+  // Task 2:
   // You may want to modify this for supersampling support
   this->sample_rate = sample_rate;
 
@@ -85,7 +85,7 @@ void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
 void SoftwareRendererImp::set_pixel_buffer( unsigned char* pixel_buffer,
                                              size_t width, size_t height ) {
 
-  // Task 2: 
+  // Task 2:
   // You may want to modify this for supersampling support
   this->pixel_buffer = pixel_buffer;
   this->width = width;
@@ -139,7 +139,7 @@ void SoftwareRendererImp::draw_point( Point& point ) {
 
 }
 
-void SoftwareRendererImp::draw_line( Line& line ) { 
+void SoftwareRendererImp::draw_line( Line& line ) {
 
   Vector2D p0 = transform(line.from);
   Vector2D p1 = transform(line.to);
@@ -164,7 +164,7 @@ void SoftwareRendererImp::draw_polyline( Polyline& polyline ) {
 void SoftwareRendererImp::draw_rect( Rect& rect ) {
 
   Color c;
-  
+
   // draw as two triangles
   float x = rect.position.x;
   float y = rect.position.y;
@@ -175,7 +175,7 @@ void SoftwareRendererImp::draw_rect( Rect& rect ) {
   Vector2D p1 = transform(Vector2D( x + w ,   y   ));
   Vector2D p2 = transform(Vector2D(   x   , y + h ));
   Vector2D p3 = transform(Vector2D( x + w , y + h ));
-  
+
   // draw fill
   c = rect.style.fillColor;
   if (c.a != 0 ) {
@@ -255,7 +255,7 @@ void SoftwareRendererImp::draw_group( Group& group ) {
 
 // Rasterization //
 
-// The input arguments in the rasterization functions 
+// The input arguments in the rasterization functions
 // below are all defined in screen space coordinates
 
 void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
@@ -277,13 +277,57 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
 
 }
 
+void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
+          unsigned x2, unsigned y2, Color color)
+{
+  int dx  = x2 - x1,
+          dy  = y2 - y1,
+          y   = y1,
+          eps = 0;
+
+  float s = dy / dx;
+  if (dx == 0 || abs(s)>1)
+  {
+    int x = x1;
+    for ( int y = y1; y <= y2; y++ )  {
+    rasterize_point(x, y, color);
+    eps += dx;
+    if ( (eps << 1) >= dy )  {
+      x++;  eps -= dy;
+    }
+    }
+    return;
+  }
+
+  for ( int x = x1; x <= x2; x++ )  {
+    rasterize_point(x, y, color);
+    eps += dy;
+    if ( (eps << 1) >= dx )  {
+      y++;  eps -= dx;
+    }
+  }
+}
+
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
                                           float x1, float y1,
                                           Color color) {
 
-  // Task 0: 
+  // Task 0:
   // Implement Bresenham's algorithm (delete the line below and implement your own)
-  ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
+  //ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
+  float dx = x1 - x0;
+  float dy = y1 - y0;
+  std::cout<<"x0:"<<x0<<" y0:"<<y0<<" x1:"<<x1<<" y1:"<<y1<<"s: "<<dy/dx <<std::endl;
+
+  if (x1 < x0 || y1 < y0) {
+    swap(x1, x0);
+    swap(y1, y0);
+  }
+
+  /*float dx  = x1 - x0;
+  float dy  = y1 - y0;
+  */
+  bline(x0, y0, x1, y1, color);
 
   // Advanced Task
   // Drawing Smooth Lines with Line Width
@@ -293,7 +337,7 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
                                               float x1, float y1,
                                               float x2, float y2,
                                               Color color ) {
-  // Task 1: 
+  // Task 1:
   // Implement triangle rasterization
 
   // Advanced Task
@@ -304,7 +348,7 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
 void SoftwareRendererImp::rasterize_image( float x0, float y0,
                                            float x1, float y1,
                                            Texture& tex ) {
-  // Task 4: 
+  // Task 4:
   // Implement image rasterization
 
 }
@@ -312,7 +356,7 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
 // resolve samples to pixel buffer
 void SoftwareRendererImp::resolve( void ) {
 
-  // Task 2: 
+  // Task 2:
   // Implement supersampling
   // You may also need to modify other functions marked with "Task 2".
   return;
