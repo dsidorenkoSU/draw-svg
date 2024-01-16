@@ -285,8 +285,8 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
           y   = y1,
           eps = 0;
 
-  float s = dy / dx;
-  if (dx == 0 || abs(s)>1)
+  float s = (float)dy / (float)dx;
+  if (dx == 0 || s > 1.0f)
   {
     int x = x1;
     for ( int y = y1; y <= y2; y++ )  {
@@ -295,6 +295,26 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
     if ( (eps << 1) >= dy )  {
       x++;  eps -= dy;
     }
+    }
+    return;
+  }
+  if ( s <0.0f && s>-1.0f)
+  {
+    float e = 0.0f;
+    float y = y1;
+    float m = s;
+    for ( int x = x1; x <= x2; x++ )  {
+      rasterize_point(x, y, color);
+      if (e+m > -0.5f)
+      {
+        e = e+m;
+      }
+      else
+      {
+        y-=1.0f;
+        e = e + m +1.0f;
+      }
+
     }
     return;
   }
@@ -317,9 +337,9 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   //ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
   float dx = x1 - x0;
   float dy = y1 - y0;
-  std::cout<<"x0:"<<x0<<" y0:"<<y0<<" x1:"<<x1<<" y1:"<<y1<<"s: "<<dy/dx <<std::endl;
+  //std::cout<<"x0:"<<x0<<" y0:"<<y0<<" x1:"<<x1<<" y1:"<<y1<<"s: "<<dy/dx <<std::endl;
 
-  if (x1 < x0 || y1 < y0) {
+  if (x1 < x0) {
     swap(x1, x0);
     swap(y1, y0);
   }
