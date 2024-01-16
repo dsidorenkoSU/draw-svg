@@ -285,10 +285,10 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
           y   = y1,
           eps = 0;
 
-  float s = (float)dy / (float)dx;
-  if ( (dx == 0 && y1 < y2) || s > 0.0f)
+  float s = (float)dy / (float)dx; // calculate slope
+  if ((dx == 0 && y1 < y2) || s > 0.0f) // positive slope
   {
-    if (dx == 0 || s>1.0f)
+    if (dx == 0 || s > 1.0f)
     {
       int x = x1;
       for ( int y = y1; y <= y2; y++ )  {
@@ -299,7 +299,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
       }
       }
       return;
-    } else
+    } else 
     {
        for ( int x = x1; x <= x2; x++ )  {
         rasterize_point(x, y, color);
@@ -311,7 +311,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
       return;
     }
   }
-  if ( s <0.0f)
+  if ( s <0.0f) // negative slope
   {
     if (s>-1.0f)
     {
