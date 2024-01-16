@@ -286,35 +286,66 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
           eps = 0;
 
   float s = (float)dy / (float)dx;
-  if (dx == 0 || s > 1.0f)
+  if ( (dx == 0 && y1 < y2) || s > 0.0f)
   {
-    int x = x1;
-    for ( int y = y1; y <= y2; y++ )  {
-    rasterize_point(x, y, color);
-    eps += dx;
-    if ( (eps << 1) >= dy )  {
-      x++;  eps -= dy;
-    }
-    }
-    return;
-  }
-  if ( s <0.0f && s>-1.0f)
-  {
-    float e = 0.0f;
-    float y = y1;
-    float m = s;
-    for ( int x = x1; x <= x2; x++ )  {
+    if (dx == 0 || s>1.0f)
+    {
+      int x = x1;
+      for ( int y = y1; y <= y2; y++ )  {
       rasterize_point(x, y, color);
-      if (e+m > -0.5f)
-      {
-        e = e+m;
+      eps += dx;
+      if ( (eps << 1) >= dy )  {
+        x++;  eps -= dy;
       }
-      else
-      {
-        y-=1.0f;
-        e = e + m +1.0f;
       }
-
+      return;
+    } else
+    {
+       for ( int x = x1; x <= x2; x++ )  {
+        rasterize_point(x, y, color);
+        eps += dy;
+        if ( (eps << 1) >= dx )  {
+          y++;  eps -= dx;
+        }
+      }
+      return;
+    }
+  }
+  if ( s <0.0f)
+  {
+    if (s>-1.0f)
+    {
+      float e = 0.0f;
+      float y = y1;
+      float m = s;
+      for ( int x = x1; x <= x2; x++ )  {
+        rasterize_point(x, y, color);
+        if (e+m > -0.5f)
+        {
+          e = e+m;
+        }
+        else
+        {
+          y-=1.0f;
+          e = e + m +1.0f;
+        }
+      }
+    } else {
+      float e = 0.0f;
+      float x = x1;
+      float m = 1/s;
+      for ( int y = y1; y >= y2; y-- )  {
+        rasterize_point(x, y, color);
+        if (e+m > -0.5f)
+        {
+          e = e+m;
+        }
+        else
+        {
+          x+=1.0f;
+          e = e + m +1.0f;
+        }
+      }
     }
     return;
   }
