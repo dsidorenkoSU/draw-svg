@@ -47,7 +47,9 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 void SoftwareRendererImp::draw_svg( SVG& svg ) {
 
   // set top level transformation
-  transformation = canvas_to_screen;
+  // cout << transformation << "trans" << endl;
+
+  transformation = canvas_to_screen; // this is 3x3 matrix, initially transformation is identity 
 
   // canvas outline
   Vector2D a = transform(Vector2D(0, 0)); a.x--; a.y--;
@@ -60,9 +62,11 @@ void SoftwareRendererImp::draw_svg( SVG& svg ) {
 
   // draw all elements
   for (size_t i = 0; i < svg.elements.size(); ++i) {
+    transformation = Matrix3x3::identity(); // set transformation back to identity before drawing each element 
     draw_element(svg.elements[i]);
   }
-
+  
+  transformation = canvas_to_screen; 
   // draw canvas outline
   rasterize_line(a.x, a.y, b.x, b.y, Color::Black);
   rasterize_line(a.x, a.y, c.x, c.y, Color::Black);
@@ -97,6 +101,15 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
 
 	// Task 3 (part 1):
 	// Modify this to implement the transformation stack
+  
+  //transformation = transformation.operator*(element->transform);
+  // element->transform = canvas_to_screen.operator*(transformation.inv()); 
+  // cout << element->transform << "element_t_after" << endl;
+  Matrix3x3 transformation_g = transformation.operator*(element->transform);
+  // Matrix3x3 transformation_g = (element->transform).operator*(transformation);
+
+  transformation = canvas_to_screen.operator*(transformation_g); 
+  cout << transformation << "trans2" << endl;
 
 	switch (element->type) {
 	case POINT:
@@ -121,7 +134,9 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
 		draw_image(static_cast<Image&>(*element));
 		break;
 	case GROUP:
-		draw_group(static_cast<Group&>(*element));
+    // transformation = transformation_g;
+    // transformation = transformation.operator*(canvas_to_screen.inv()).operator*(element->transform);
+		draw_group(static_cast<Group&>(*element), transformation_g);
 		break;
 	default:
 		break;
@@ -245,9 +260,10 @@ void SoftwareRendererImp::draw_image( Image& image ) {
   rasterize_image( p0.x, p0.y, p1.x, p1.y, image.tex );
 }
 
-void SoftwareRendererImp::draw_group( Group& group ) {
+void SoftwareRendererImp::draw_group( Group& group, Matrix3x3 transformation_g ) {
 
   for ( size_t i = 0; i < group.elements.size(); ++i ) {
+    transformation = transformation_g;
     draw_element(group.elements[i]);
   }
 
