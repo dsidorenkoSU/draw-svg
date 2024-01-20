@@ -102,14 +102,9 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
 	// Task 3 (part 1):
 	// Modify this to implement the transformation stack
   
-  //transformation = transformation.operator*(element->transform);
-  // element->transform = canvas_to_screen.operator*(transformation.inv()); 
-  // cout << element->transform << "element_t_after" << endl;
-  Matrix3x3 transformation_g = transformation.operator*(element->transform);
-  // Matrix3x3 transformation_g = (element->transform).operator*(transformation);
-
-  transformation = canvas_to_screen.operator*(transformation_g); 
-  cout << transformation << "trans2" << endl;
+  Matrix3x3 transformation_g = transformation.operator*(element->transform); // multiply transform together 
+  transformation = canvas_to_screen.operator*(transformation_g); // respect to canvas_to_space
+  // cout << transformation << "trans" << endl;
 
 	switch (element->type) {
 	case POINT:
@@ -135,8 +130,7 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
 		break;
 	case GROUP:
     // transformation = transformation_g;
-    // transformation = transformation.operator*(canvas_to_screen.inv()).operator*(element->transform);
-		draw_group(static_cast<Group&>(*element), transformation_g);
+		draw_group(static_cast<Group&>(*element), transformation_g);  
 		break;
 	default:
 		break;
@@ -263,7 +257,7 @@ void SoftwareRendererImp::draw_image( Image& image ) {
 void SoftwareRendererImp::draw_group( Group& group, Matrix3x3 transformation_g ) {
 
   for ( size_t i = 0; i < group.elements.size(); ++i ) {
-    transformation = transformation_g;
+    transformation = transformation_g; // reset transformation to group one before drawing element 
     draw_element(group.elements[i]);
   }
 
