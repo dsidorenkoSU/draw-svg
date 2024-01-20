@@ -126,7 +126,7 @@ private:
 	void draw_image(Image& image);
 
 	// Draw a group
-	void draw_group(Group& group, Matrix3x3 transformation_g);
+	void draw_group(Group& group);
 
 	void bline(unsigned x1, unsigned y1,
           unsigned x2, unsigned y2, Color color);
