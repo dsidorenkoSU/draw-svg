@@ -445,10 +445,12 @@ void SoftwareRendererImp::drawTri(float x0, float y0,
     float x1, float y1,
     float x2, float y2,
     Color color) {
+    // Create points in homogenous coords
     Vector3D pt0(x0, y0, 1.0f);
     Vector3D pt1(x1, y1, 1.0f);
     Vector3D pt2(x2, y2, 1.0f);
 
+    // Check it triangle is clockwise and swap edges if it is
     if (cross(Vector2D(x1 - x0, y1 - y0), Vector2D(x2 - x1, y2 - y1)) < 0)
     {
         swap(pt0, pt1);
@@ -456,13 +458,17 @@ void SoftwareRendererImp::drawTri(float x0, float y0,
 
     // Task 1:
     // Implement triangle rasterization
+    //Calculate bounding rect
     Vector2D min, max;
     calcBoudingRect(x0, y0, x1, y1, x2, y2, min, max);
+    
+    // Calculate line coefficients
     Vector3D l0, l1, l2;
     calcABC(pt0, pt1, pt2, l0);
     calcABC(pt1, pt2, pt0, l1);
     calcABC(pt2, pt0, pt1, l2);
 
+    //Rasterize triangle
     for (float x = min.x; x < max.x; x += 1.0f)
     {
         for (float y = min.y; y < max.y; y += 1.0f)
