@@ -452,13 +452,18 @@ void SoftwareRendererImp::drawTriImpl(float x0, float y0,
     {
         swap(pt0, pt1);
     }
+    
+    //Calculate bounding rect
     Vector2D min, max;
     calcBoudingRect(x0, y0, x1, y1, x2, y2, min, max);
     Vector3D l0, l1, l2;
+    
+    // Calculate line coefficients
     calcABC(pt0, pt1, pt2, l0);
     calcABC(pt1, pt2, pt0, l1);
     calcABC(pt2, pt0, pt1, l2);
     
+    // Draw triangle 
     for (float x = min.x; x < max.x; x += 1.0f)
     {
         for (float y = min.y; y < max.y; y += 1.0f)
