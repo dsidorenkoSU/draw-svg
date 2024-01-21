@@ -3,3 +3,4 @@ lib/
 build/
 CMakeFiles/
 CMakeCache.txt
+CS248/*

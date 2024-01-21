@@ -409,14 +409,14 @@ void DrawSVG::draw_zoom() {
 void DrawSVG::inc_sample_rate() {
   sample_rate += sample_rate < 4 ? 1 : 0;
   software_renderer_imp->set_sample_rate(sample_rate);
-  software_renderer_ref->set_sample_rate(sample_rate);
+  //software_renderer_ref->set_sample_rate(sample_rate);
   redraw();
 }
 
 void DrawSVG::dec_sample_rate() {
   sample_rate -= sample_rate > 1 ? 1 : 0;
   software_renderer_imp->set_sample_rate(sample_rate);
-  software_renderer_ref->set_sample_rate(sample_rate);
+  //software_renderer_ref->set_sample_rate(sample_rate);
   redraw();
 }
 

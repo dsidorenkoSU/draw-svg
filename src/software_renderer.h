@@ -58,11 +58,14 @@ class SoftwareRenderer : public SVGRenderer {
 
  protected:
 
+	
   // Sample rate (square root of samples per pixel)
   size_t sample_rate;
 
   // Pixel buffer memory location
   unsigned char* pixel_buffer;
+
+  vector<unsigned char> sample_buffer;
 
   // Pixel buffer dimension (in pixels)
   size_t width; size_t height;
@@ -98,6 +101,11 @@ public:
 	void fill_pixel(int x, int y, const Color& color);
 
 private:
+	
+	void drawTri(float x0, float y0,
+		float x1, float y1,
+		float x2, float y2,
+		Color color);
 
 	// Primitive Drawing //
 
