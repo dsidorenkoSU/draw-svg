@@ -82,7 +82,9 @@ class SoftwareRenderer : public SVGRenderer {
 class SoftwareRendererImp : public SoftwareRenderer {
 public:
 
-	SoftwareRendererImp(SoftwareRendererRef *ref = NULL) : SoftwareRenderer(), ref(ref) { }
+	SoftwareRendererImp(SoftwareRendererRef *ref = NULL) : SoftwareRenderer(), ref(ref) { 
+		bgColor = Color(1.0f, 1.0f, 1.0f, 1.0f);
+	}
 
 	// draw an svg input to pixel buffer
 	void draw_svg(SVG& svg);
@@ -128,6 +130,8 @@ private:
 	// Draw a group
 	void draw_group(Group& group);
 
+	void fill_sample_buffer(const Color& c);
+
 	void bline(unsigned x1, unsigned y1,
           unsigned x2, unsigned y2, Color color);
 	// Rasterization //
@@ -162,6 +166,10 @@ private:
 
 	// task5 alpha compositing
 	Color alpha_blending(Color pixel_color, Color color);
+
+	// SSAA sample buffer
+	std::vector<unsigned char> sample_buffer;
+	Color bgColor;
 
 	SoftwareRendererRef *ref;
 }; // class SoftwareRendererImp

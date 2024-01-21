@@ -17,6 +17,24 @@ namespace CS248 {
 // fill a sample location with color
 void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
   // Task 2: implement this function
+  
+  // check bounds
+  if (sx < 0 || sx >= width*sample_rate) return;
+  if (sy < 0 || sy >= height*sample_rate) return;
+
+  Color pixel_color;
+  float inv255 = 1.0 / 255.0;
+  pixel_color.r = sample_buffer[4 * (sx + sy * width)] * inv255;
+  pixel_color.g = sample_buffer[4 * (sx + sy * width) + 1] * inv255;
+  pixel_color.b = sample_buffer[4 * (sx + sy * width) + 2] * inv255;
+  pixel_color.a = sample_buffer[4 * (sx + sy * width) + 3] * inv255;
+
+  pixel_color = ref->alpha_blending_helper(pixel_color, color);
+
+  sample_buffer[4 * (sx + sy * width)] = (uint8_t)(pixel_color.r * 255);
+  sample_buffer[4 * (sx + sy * width) + 1] = (uint8_t)(pixel_color.g * 255);
+  sample_buffer[4 * (sx + sy * width) + 2] = (uint8_t)(pixel_color.b * 255);
+  sample_buffer[4 * (sx + sy * width) + 3] = (uint8_t)(pixel_color.a * 255);
 }
 
 // fill samples in the entire pixel specified by pixel coordinates
@@ -28,19 +46,11 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 	if (x < 0 || x >= width) return;
 	if (y < 0 || y >= height) return;
 
-	Color pixel_color;
-	float inv255 = 1.0 / 255.0;
-	pixel_color.r = pixel_buffer[4 * (x + y * width)] * inv255;
-	pixel_color.g = pixel_buffer[4 * (x + y * width) + 1] * inv255;
-	pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
-	pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
-
-	pixel_color = ref->alpha_blending_helper(pixel_color, color);
-
-	pixel_buffer[4 * (x + y * width)] = (uint8_t)(pixel_color.r * 255);
-	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pixel_color.g * 255);
-	pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(pixel_color.b * 255);
-	pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(pixel_color.a * 255);
+	
+	pixel_buffer[4 * (x + y * width)] = (uint8_t) (color.r * 255);
+	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(color.g * 255);
+	pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(color.b * 255);
+	pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(color.a * 255);
 
 }
 
@@ -83,7 +93,17 @@ void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
   // Task 2:
   // You may want to modify this for supersampling support
   this->sample_rate = sample_rate;
+  sample_buffer.resize(4 * width * height * sample_rate * sample_rate);
+  fill_sample_buffer(bgColor);
+}
 
+void SoftwareRendererImp::fill_sample_buffer(const Color& c)
+{
+    for (int x = 0; x < width * sample_rate; ++x) {
+        for (int y = 0; y < height * sample_rate; ++y) {
+            fill_sample(x, y, c);
+        }
+    }
 }
 
 void SoftwareRendererImp::set_pixel_buffer( unsigned char* pixel_buffer,
@@ -94,7 +114,8 @@ void SoftwareRendererImp::set_pixel_buffer( unsigned char* pixel_buffer,
   this->pixel_buffer = pixel_buffer;
   this->width = width;
   this->height = height;
-
+  sample_buffer.resize(4 * width * height * sample_rate * sample_rate);
+  fill_sample_buffer(bgColor);
 }
 
 void SoftwareRendererImp::draw_element( SVGElement* element ) {
@@ -395,31 +416,28 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // Drawing Smooth Lines with Line Width
 }
 
-void calcBoudingRect(float x0, float y0,
-    float x1, float y1,
-    float x2, float y2, Vector2D& min, Vector2D& max)
+void calcBoudingRect(const std::vector<Vector3D>& v, 
+    Vector2D& min, Vector2D& max)
 {
-    min.x = x0;
-    if (x1 < min.x)
-        min.x = x1;
-    if (x2 < min.x)
-        min.x = x2;
-    min.y = y0;
-    if (y1 < min.y)
-        min.y = y1;
-    if (y2 < min.y)
-        min.y = y2;
-
-    max.x = x0;
-    if (x1 > max.x)
-        max.x = x1;
-    if (x2 > max.x)
-        max.x = x2;
-    max.y = y0;
-    if (y1 > max.y)
-        max.y = y1;
-    if (y2 > max.y)
-        max.y = y2;
+    min.x = v[0].x;
+    min.y = v[0].y;
+    max.x = v[0].x;
+    max.y = v[0].y;
+    for (int i = 1; i < v.size(); ++i) {
+        if (v[i].x < min.x) {
+            min.x = v[i].x;
+        }
+        if (v[i].x > max.x) {
+            max.x = v[i].x;
+        }
+        if (v[i].y < min.y) {
+            min.y = v[i].y;
+        }
+        if (v[i].y > max.y) {
+            max.y = v[i].y;
+        }
+    }
+    
 }
 
 void calcABC(const Vector3D& pt0,
@@ -433,8 +451,26 @@ void calcABC(const Vector3D& pt0,
 
 bool isInsideTri(float x, float y, const Vector3D& l0, const Vector3D& l1, const Vector3D& l2)
 {
-    Vector3D pxC(x + 0.5f, y + 0.5f, 1.0f);
+    Vector3D pxC(x, y, 1.0f);
     return dot(l0, pxC) <= 0.0f && dot(l1, pxC) <= 0.0f && dot(l2, pxC) <= 0.0f;
+}
+
+Vector2D toSampleSpace(const Vector2D& pt, float sample_rate, const Vector2D& sc)
+{
+    Vector2D vc = (pt - sc) * sample_rate;
+
+    return Vector2D(vc.x + sc.x * sample_rate, vc.y + sc.y * sample_rate);
+}
+
+Vector3D toSampleSpace(const Vector3D& vec, float sample_rate, const Vector2D& sc) 
+{
+    Vector2D ss = toSampleSpace(Vector2D(vec.x, vec.y), sample_rate, sc);
+    return Vector3D(ss.x, ss.y, 1.0f);
+}
+
+Vector2D toScreenSpace(const Vector2D& vec, float sample_rate)
+{
+    return Vector2D(vec.x / sample_rate, vec.y / sample_rate);
 }
 
 // rasterize a triangle implementation
@@ -443,10 +479,11 @@ void SoftwareRendererImp::drawTriImpl(float x0, float y0,
     float x2, float y2,
     Color color)
 {
-    
-    Vector3D pt0(x0, y0, 1.0f);
-    Vector3D pt1(x1, y1, 1.0f);
-    Vector3D pt2(x2, y2, 1.0f);
+    Vector2D sc((float)width / 2.0f, (float)height / 2.0f);
+    Vector3D pt0 = toSampleSpace(Vector3D(x0 , y0 , 1.0f), sample_rate, sc);
+    Vector3D pt1 = toSampleSpace(Vector3D(x1 , y1 , 1.0f), sample_rate, sc);
+    Vector3D pt2 = toSampleSpace(Vector3D(x2 , y2 , 1.0f), sample_rate, sc);
+
     // Check is triangle is clockwise and flip it if necessary
     if (cross(Vector2D(x1 - x0, y1 - y0), Vector2D(x2 - x1, y2 - y1)) < 0)
     {
@@ -455,7 +492,11 @@ void SoftwareRendererImp::drawTriImpl(float x0, float y0,
     
     //Calculate bounding rect
     Vector2D min, max;
-    calcBoudingRect(x0, y0, x1, y1, x2, y2, min, max);
+    std::vector<Vector3D> v(3);
+    v[0] = pt0;
+    v[1] = pt1;
+    v[2] = pt2;
+    calcBoudingRect(v , min, max);
     Vector3D l0, l1, l2;
     
     // Calculate line coefficients
@@ -463,13 +504,15 @@ void SoftwareRendererImp::drawTriImpl(float x0, float y0,
     calcABC(pt1, pt2, pt0, l1);
     calcABC(pt2, pt0, pt1, l2);
     
-    // Draw triangle 
-    for (float x = min.x; x < max.x; x += 1.0f)
+    // Drawing triangle samples in the sample space 
+    for (float x = (int)min.x; x < max.x; x += 1.0f)
     {
-        for (float y = min.y; y < max.y; y += 1.0f)
+        for (float y = (int)min.y; y < max.y; y += 1.0f)
         {
-            if (isInsideTri(x, y, l0, l1, l2))
-                rasterize_point(x, y, color);
+            if (isInsideTri(x+0.5f, y+0.5f, l0, l1, l2))
+            {
+                fill_sample(x, y, color);
+            }
         }
     }
 }
@@ -500,7 +543,49 @@ void SoftwareRendererImp::resolve( void ) {
 
   // Task 2:
   // Implement supersampling
-  // You may also need to modify other functions marked with "Task 2".
+    for (int x = 0; x < width; ++x)
+    {
+        for (int y = 0; y < height; ++y)
+        {
+            Color pc;
+            for (int xS = x * sample_rate; xS < (x + 1) * sample_rate; ++xS)
+            {
+                for (int yS = y * sample_rate; yS < (y + 1) * sample_rate; ++yS)
+                {
+                    Color c((float)sample_buffer[4 * (xS + yS * width)] / 255.0f,
+                        (float)sample_buffer[4 * (xS + yS * width) + 1] / 255.0f,
+                        (float)sample_buffer[4 * (xS + yS * width) + 2] / 255.0f,
+                        (float)sample_buffer[4 * (xS + yS * width) + 3] / 255.0f);
+                    c *= 1.0f / (float)(sample_rate * sample_rate);
+                    pc += c;
+                }
+            }
+            fill_pixel(x, y, pc);
+        }
+    }
+
+  /*for (int sX = 0; sX < width * sample_rate; sX += sample_rate) {
+      for (int sY = 0; sY < height*sample_rate; sY += sample_rate) {
+          Color pc;
+          for (int dX = 0; dX < sample_rate; ++dX) {
+              for (int dY = 0; dY < sample_rate; ++dY) {
+                  
+                  Color c((float)sample_buffer[4 * (sX+dX + (sY+dY) * width)] / 255.0f,
+                      (float)sample_buffer[4 * (sX + dX + (sY + dY) * width) + 1] / 255.0f,
+                      (float)sample_buffer[4 * (sX + dX + (sY + dY) * width) + 2] / 255.0f,
+                      (float)sample_buffer[4 * (sX + dX + (sY + dY) * width) + 3] / 255.0f);
+                  c *= 1.0f / (float)(sample_rate * sample_rate);
+                  pc += c;
+              }
+          }
+          int x = sX / sample_rate;
+          int y = sY / sample_rate;
+          fill_pixel(x, y, pc);
+      }
+  }*/
+
+  fill_sample_buffer(bgColor);
+
   return;
 
 }
