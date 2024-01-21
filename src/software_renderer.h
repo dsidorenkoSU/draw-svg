@@ -140,6 +140,12 @@ private:
 		float x1, float y1,
 		Color color);
 
+	// rasterize a triangle implementation
+	void drawTriImpl(float x0, float y0,
+		float x1, float y1,
+		float x2, float y2,
+		Color color);
+
 	// rasterize a triangle
 	void rasterize_triangle(float x0, float y0,
 		float x1, float y1,

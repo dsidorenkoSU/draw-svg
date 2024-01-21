@@ -395,12 +395,87 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // Drawing Smooth Lines with Line Width
 }
 
+void calcBoudingRect(float x0, float y0,
+    float x1, float y1,
+    float x2, float y2, Vector2D& min, Vector2D& max)
+{
+    min.x = x0;
+    if (x1 < min.x)
+        min.x = x1;
+    if (x2 < min.x)
+        min.x = x2;
+    min.y = y0;
+    if (y1 < min.y)
+        min.y = y1;
+    if (y2 < min.y)
+        min.y = y2;
+
+    max.x = x0;
+    if (x1 > max.x)
+        max.x = x1;
+    if (x2 > max.x)
+        max.x = x2;
+    max.y = y0;
+    if (y1 > max.y)
+        max.y = y1;
+    if (y2 > max.y)
+        max.y = y2;
+}
+
+void calcABC(const Vector3D& pt0,
+    const Vector3D& pt1,
+    const Vector3D& pt2, Vector3D& abc)
+{
+    abc.x = pt1.y - pt0.y;
+    abc.y = -(pt1.x - pt0.x);
+    abc.z = pt0.y * (pt1.x - pt0.x) - pt0.x * (pt1.y - pt0.y);
+}
+
+bool isInsideTri(float x, float y, const Vector3D& l0, const Vector3D& l1, const Vector3D& l2)
+{
+    Vector3D pxC(x + 0.5f, y + 0.5f, 1.0f);
+    return dot(l0, pxC) <= 0.0f && dot(l1, pxC) <= 0.0f && dot(l2, pxC) <= 0.0f;
+}
+
+// rasterize a triangle implementation
+void SoftwareRendererImp::drawTriImpl(float x0, float y0,
+    float x1, float y1,
+    float x2, float y2,
+    Color color)
+{
+    
+    Vector3D pt0(x0, y0, 1.0f);
+    Vector3D pt1(x1, y1, 1.0f);
+    Vector3D pt2(x2, y2, 1.0f);
+    // Check is triangle is clockwise and flip it if necessary
+    if (cross(Vector2D(x1 - x0, y1 - y0), Vector2D(x2 - x1, y2 - y1)) < 0)
+    {
+        swap(pt0, pt1);
+    }
+    Vector2D min, max;
+    calcBoudingRect(x0, y0, x1, y1, x2, y2, min, max);
+    Vector3D l0, l1, l2;
+    calcABC(pt0, pt1, pt2, l0);
+    calcABC(pt1, pt2, pt0, l1);
+    calcABC(pt2, pt0, pt1, l2);
+    
+    for (float x = min.x; x < max.x; x += 1.0f)
+    {
+        for (float y = min.y; y < max.y; y += 1.0f)
+        {
+            if (isInsideTri(x, y, l0, l1, l2))
+                rasterize_point(x, y, color);
+        }
+    }
+}
+
 void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
                                               float x1, float y1,
                                               float x2, float y2,
                                               Color color ) {
   // Task 1:
   // Implement triangle rasterization
+  drawTriImpl(x0, y0, x1, y1, x2, y2, color);
 
   // Advanced Task
   // Implementing Triangle Edge Rules
