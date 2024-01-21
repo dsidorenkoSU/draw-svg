@@ -65,7 +65,7 @@ class SoftwareRenderer : public SVGRenderer {
   // Pixel buffer memory location
   unsigned char* pixel_buffer;
 
-  vector<unsigned char> sample_buffer;
+  std::vector<unsigned char> sample_buffer;
 
   // Pixel buffer dimension (in pixels)
   size_t width; size_t height;
