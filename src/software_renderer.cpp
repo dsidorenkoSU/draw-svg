@@ -505,7 +505,7 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
 
   for ( int x = x_s; x <= x1; x++ )  { 
       for ( int y = y_s; y <= y1; y++ )  {
-        float u = float(x-x_s)/(x1-x0); // calculate location on texture, always 0-1  
+        float u = float(x-x_s)/(x1-x0); // calculate location on texture, always > 0...but can be larger than 1 
         float v = float(y-y_s)/(y1-y0); 
         // Color sample_color = sampler->sample_nearest(tex, u, v, 0); // sampe nearest
         Color sample_color = sampler->sample_bilinear(tex, u, v, 0); // sample bilinear 

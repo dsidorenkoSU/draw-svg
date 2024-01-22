@@ -85,13 +85,28 @@ Color Sampler2DImp::sample_nearest(Texture& tex,
 
   // Task 4: Implement nearest neighbour interpolation
   
-  int tex_y = int(round(v*tex.height));  // get neatest in y
-  int tex_x = int(round(u*tex.width));   // get nearest in x 
+  int tex_y = int(round(v*(tex.height-1)));  // get neatest in y
+  int tex_x = int(round(u*(tex.width-1)));   // get nearest in x 
 
-  // check invalid level and return mangeta 
-  if (tex_x > tex.width || tex_y > tex.width || tex_x < 0 || tex_y < 0) {
-    return Color(1,0,1,1);
+  // check boundary 
+  if (tex_x > tex.width-1) {
+    tex_x = tex.width-1; 
   }
+  if (tex_y > tex.height-1) {
+    tex_y = tex.height-1; 
+  }
+  if (tex_x < 0) { // < 0 case shouldnt happen...
+    tex_x = 0; 
+  }
+  if (tex_y < 0) { // < 0 case shouldnt happen...
+    tex_y = 0; 
+  }
+
+  
+  // // check invalid level and return mangeta. this shouldnt happen...
+  // if (tex_x > tex.width || tex_y > tex.width || tex_x < 0 || tex_y < 0) {
+  //   return Color(1,0,1,1);
+  // }
 
   int loc = (tex_y*tex.width+tex_x)*4; // row major so do y*width, *4 because of RGBA 
 
@@ -107,19 +122,37 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
                                     int level) {
   
   // Task 4: Implement bilinear filtering  
-  float tex_y = v*float(tex.height);  
-  float tex_x = u*float(tex.width);  
+  float tex_y = v*float(tex.height-1); // -1 because it runs from 0 to height-1 
+  float tex_x = u*float(tex.width-1);  
 
-  // check invalid level and return mangeta 
-  if (tex_x > tex.width || tex_y > tex.width || tex_x < 0 || tex_y < 0) {
-    return Color(1,0,1,1);
-  }
+  // // check invalid level and return mangeta 
+  // if (tex_x > tex.width || tex_y > tex.width || tex_x < 0 || tex_y < 0) {
+  //   cout << u << " " << v << endl; 
+
+  //   return Color(1,0,1,1);
+  // }
   
+  // check boundary 
+  if (tex_x > tex.width-1) {
+    tex_x = tex.width-1; 
+  }
+  if (tex_y > tex.height-1) {
+    tex_y = tex.height-1; 
+  }
+  if (tex_x < 0) { // < 0 case shouldnt happen...
+    tex_x = 0; 
+  }
+  if (tex_y < 0) { // < 0 case shouldnt happen...
+    tex_y = 0; 
+  }
+
   // calculate integer location between tex_x, text_y 
   float x0 = floor(tex_x); 
   float x1 = floor(tex_x)+1; 
+  x1 = (x1 > tex.width) ? x0 : x1;  
   float y0 = floor(tex_y); 
   float y1 = floor(tex_y)+1; 
+  y1 = (y1 > tex.height) ? y0 : y1;  
 
   // calculate location in the texture 
   int loc_x0y0 = (int(y0)*tex.width+int(x0))*4; // row major so do y*width, *4 because of RGBA 
@@ -127,10 +160,11 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
   int loc_x0y1 = (int(y1)*tex.width+int(x0))*4; 
   int loc_x1y1 = (int(y1)*tex.width+int(x1))*4; 
 
+
   // bilinear interpolation 
   float color_interp[4] = {0, 0, 0, 0}; 
-  for (int i = 0; i < 4; i++ ) {
-    // get color 
+  for (int i = 0; i < 4; i++ ) { //RGBA
+    // get color  
     float color_x0y0 = float(tex.mipmap[level].texels[loc_x0y0+i]);
     float color_x1y0 = float(tex.mipmap[level].texels[loc_x1y0+i]);
     float color_x0y1 = float(tex.mipmap[level].texels[loc_x0y1+i]);
