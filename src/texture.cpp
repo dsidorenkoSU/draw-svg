@@ -85,8 +85,8 @@ Color Sampler2DImp::sample_nearest(Texture& tex,
 
   // Task 4: Implement nearest neighbour interpolation
   
-  int tex_y = int(round(v*(tex.height-1)));  // get neatest in y
-  int tex_x = int(round(u*(tex.width-1)));   // get nearest in x 
+  int tex_y = int(round(v*(tex.height)-1)); // get nearest in y
+  int tex_x = int(round(u*(tex.width)-1));  // get nearest in x 
 
   // check boundary 
   if (tex_x > tex.width-1) {
@@ -122,8 +122,8 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
                                     int level) {
   
   // Task 4: Implement bilinear filtering  
-  float tex_y = v*float(tex.height-1); // -1 because it runs from 0 to height-1 
-  float tex_x = u*float(tex.width-1);  
+  float tex_y = v*float(tex.height)-1; // -1 because it goes from 0 to width-1
+  float tex_x = u*float(tex.width)-1;  
 
   // // check invalid level and return mangeta 
   // if (tex_x > tex.width || tex_y > tex.width || tex_x < 0 || tex_y < 0) {
@@ -133,7 +133,7 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
   // }
   
   // check boundary 
-  if (tex_x > tex.width-1) {
+  if (tex_x > tex.width-1) { // -1 because it goes from 0 to width-1
     tex_x = tex.width-1; 
   }
   if (tex_y > tex.height-1) {
@@ -159,7 +159,6 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
   int loc_x1y0 = (int(y0)*tex.width+int(x1))*4; 
   int loc_x0y1 = (int(y1)*tex.width+int(x0))*4; 
   int loc_x1y1 = (int(y1)*tex.width+int(x1))*4; 
-
 
   // bilinear interpolation 
   float color_interp[4] = {0, 0, 0, 0}; 
