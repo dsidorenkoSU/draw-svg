@@ -555,6 +555,21 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
   // Task 4:
   // Implement image rasterization
 
+  int x_s = (int)floor(x0); 
+  int y_s = (int)floor(y0); 
+
+  for ( int x = x_s; x <= x1; x++ )  { 
+      for ( int y = y_s; y <= y1; y++ )  {
+        float u = float(x-x_s)/(x1-x0); // calculate location on texture, always 0-1  
+        float v = float(y-y_s)/(y1-y0); 
+        // Color sample_color = sampler->sample_nearest(tex, u, v, 0); // sampe nearest
+        Color sample_color = sampler->sample_bilinear(tex, u, v, 0); // sample bilinear 
+        rasterize_point(x, y, sample_color);
+      }
+  }
+
+  // cout << float(tex.mipmap[0].texels[2]) << endl;
+  // cout << float(tex.mipmap[0].texels[3]) << endl;
 }
 
 // resolve samples to pixel buffer
