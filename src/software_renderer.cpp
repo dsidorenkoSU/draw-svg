@@ -14,7 +14,7 @@ namespace CS248 {
 
 // Implements SoftwareRenderer //
 
-// fill a sample location with color
+// pack color to uint 
 unsigned int colorToUInt(const Color& c) {
         unsigned int r = 255 * c.r;
         unsigned int g = 255 * c.g;
@@ -26,6 +26,7 @@ unsigned int colorToUInt(const Color& c) {
         return r | g | b | a;
 }
 
+// unpack uint from color
 Color unitToColor(unsigned int uc) {
     float inv255 = 1.0 / 255.0;
     Color pixel_color;
@@ -36,6 +37,7 @@ Color unitToColor(unsigned int uc) {
     return pixel_color;
 }
 
+// fill a sample location with color
  void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
   // Task 2: implement this function
   
@@ -341,7 +343,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
     {
       int x = x1;
       for ( int y = y1; y <= y2; y++ )  {
-      rasterize_point(x, y, color);
+      fill_sample(x, y, color);
       eps += dx;
       if ( (eps << 1) >= dy )  {
         x++;  eps -= dy;
@@ -351,7 +353,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
     } else 
     {
        for ( int x = x1; x <= x2; x++ )  {
-        rasterize_point(x, y, color);
+        fill_sample(x, y, color);
         eps += dy;
         if ( (eps << 1) >= dx )  {
           y++;  eps -= dx;
@@ -368,7 +370,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
       float y = y1;
       float m = s;
       for ( int x = x1; x <= x2; x++ )  {
-        rasterize_point(x, y, color);
+        fill_sample(x, y, color);
         if (e+m > -0.5f)
         {
           e = e+m;
@@ -384,7 +386,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
       float x = x1;
       float m = 1/s;
       for ( int y = y1; y >= y2; y-- )  {
-        rasterize_point(x, y, color);
+        fill_sample(x, y, color);
         if (e+m > -0.5f)
         {
           e = e+m;
@@ -400,7 +402,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
   }
 
   for ( int x = x1; x <= x2; x++ )  {
-    rasterize_point(x, y, color);
+    fill_sample(x, y, color);
     eps += dy;
     if ( (eps << 1) >= dx )  {
       y++;  eps -= dx;
