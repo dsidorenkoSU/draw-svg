@@ -175,6 +175,7 @@ private:
 	// resolve samples to pixel buffer
 	void resolve(void);
 	inline int sbwidth() const { return width * sample_rate; }
+	inline Vector2D screenCenter() const { return Vector2D((float)width/2.0f, (float)height/2.0f); }
 
 	// task5 alpha compositing
 	Color alpha_blending(Color pixel_color, Color color);

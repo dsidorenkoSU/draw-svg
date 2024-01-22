@@ -37,6 +37,21 @@ Color unitToColor(unsigned int uc) {
     return pixel_color;
 }
 
+// helper function moves the point to the sample space coordinates
+Vector2D toSampleSpace(const Vector2D& pt, float sample_rate, const Vector2D& sc)
+{
+    Vector2D vc = (pt - sc) * sample_rate;
+
+    return Vector2D(vc.x + sc.x * sample_rate, vc.y + sc.y * sample_rate);
+}
+
+// helper function moves the point to the sample space coordinates
+Vector3D toSampleSpace(const Vector3D& vec, float sample_rate, const Vector2D& sc)
+{
+    Vector2D ss = toSampleSpace(Vector2D(vec.x, vec.y), sample_rate, sc);
+    return Vector3D(ss.x, ss.y, 1.0f);
+}
+
 // fill a sample location with color
  void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
   // Task 2: implement this function
@@ -45,9 +60,9 @@ Color unitToColor(unsigned int uc) {
   if (sx < 0 || sx >= width*sample_rate) return;
   if (sy < 0 || sy >= height*sample_rate) return;
 
-  Color pixel_color = unitToColor(sample_buffer[sx + sy * sbwidth()]);
-  pixel_color = ref->alpha_blending_helper(pixel_color, color);
-  sample_buffer[sx + sy * sbwidth()] = colorToUInt(pixel_color);
+  //Color pixel_color = unitToColor(sample_buffer[sx + sy * sbwidth()]);
+  //pixel_color = ref->alpha_blending_helper(pixel_color, color);
+  sample_buffer[sx + sy * sbwidth()] = colorToUInt(color);
 }
 
 void SoftwareRendererImp::set_sample(int sx, int sy, const Color& color)
@@ -65,11 +80,25 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 	if (x < 0 || x >= width) return;
 	if (y < 0 || y >= height) return;
 
-	
-	pixel_buffer[4 * (x + y * width)] = (uint8_t) (color.r * 255);
-	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(color.g * 255);
-	pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(color.b * 255);
-	pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(color.a * 255);
+    Color pixel_color;
+    float inv255 = 1.0 / 255.0;
+    pixel_color.r = pixel_buffer[4 * (x + y * width)] * inv255;
+    pixel_color.g = pixel_buffer[4 * (x + y * width) + 1] * inv255;
+    pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
+    pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
+    unsigned int pbColor = colorToUInt(pixel_color);
+    unsigned int bgColorU = colorToUInt(bgColor);
+
+    // TODO implement alpha blending
+    if (pbColor == bgColorU)
+        pixel_color = color;
+    else 
+        ref->alpha_blending_helper(pixel_color, color);
+
+	pixel_buffer[4 * (x + y * width)] = (uint8_t) (pixel_color.r * 255);
+	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pixel_color.g * 255);
+	pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(pixel_color.b * 255);
+	pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(pixel_color.a * 255);
 
 }
 
@@ -282,7 +311,13 @@ void SoftwareRendererImp::draw_ellipse( Ellipse& ellipse ) {
 
   // Advanced Task
   // Implement ellipse rasterization
-
+  
+  //Transform ellipse to the sample space coordinates  
+  Vector2D ec = toSampleSpace(ellipse.center, sample_rate, screenCenter());
+  Vector2D es = ellipse.radius * sample_rate;
+  
+  //calculate ellipse bounding rectangle
+    
 }
 
 void SoftwareRendererImp::draw_image( Image& image ) {
@@ -320,12 +355,7 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   if (sy < 0 || sy >= height) return;
 
   // fill sample - NOT doing alpha blending!
-  // TODO: Call fill_pixel here to run alpha blending
-  pixel_buffer[4 * (sx + sy * width)] = (uint8_t)(color.r * 255);
-  pixel_buffer[4 * (sx + sy * width) + 1] = (uint8_t)(color.g * 255);
-  pixel_buffer[4 * (sx + sy * width) + 2] = (uint8_t)(color.b * 255);
-  pixel_buffer[4 * (sx + sy * width) + 3] = (uint8_t)(color.a * 255);
-
+  fill_pixel(x, y, color);
 }
 
 void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
@@ -343,7 +373,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
     {
       int x = x1;
       for ( int y = y1; y <= y2; y++ )  {
-      fill_sample(x, y, color);
+      rasterize_point(x, y, color);
       eps += dx;
       if ( (eps << 1) >= dy )  {
         x++;  eps -= dy;
@@ -353,7 +383,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
     } else 
     {
        for ( int x = x1; x <= x2; x++ )  {
-        fill_sample(x, y, color);
+        rasterize_point(x, y, color);
         eps += dy;
         if ( (eps << 1) >= dx )  {
           y++;  eps -= dx;
@@ -370,7 +400,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
       float y = y1;
       float m = s;
       for ( int x = x1; x <= x2; x++ )  {
-        fill_sample(x, y, color);
+        rasterize_point(x, y, color);
         if (e+m > -0.5f)
         {
           e = e+m;
@@ -386,7 +416,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
       float x = x1;
       float m = 1/s;
       for ( int y = y1; y >= y2; y-- )  {
-        fill_sample(x, y, color);
+        rasterize_point(x, y, color);
         if (e+m > -0.5f)
         {
           e = e+m;
@@ -410,18 +440,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
   }
 }
 
-Vector2D toSampleSpace(const Vector2D& pt, float sample_rate, const Vector2D& sc)
-{
-    Vector2D vc = (pt - sc) * sample_rate;
 
-    return Vector2D(vc.x + sc.x * sample_rate, vc.y + sc.y * sample_rate);
-}
-
-Vector3D toSampleSpace(const Vector3D& vec, float sample_rate, const Vector2D& sc)
-{
-    Vector2D ss = toSampleSpace(Vector2D(vec.x, vec.y), sample_rate, sc);
-    return Vector3D(ss.x, ss.y, 1.0f);
-}
 
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
                                           float x1, float y1,
@@ -439,10 +458,10 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
     swap(y1, y0);
   }
 
-  Vector2D sc((float)width / 2.0f, (float)height / 2.0f);
-  Vector2D v0 = toSampleSpace(Vector2D(x0, y0), sample_rate, sc);
-  Vector2D v1 = toSampleSpace(Vector2D(x1, y1), sample_rate, sc);
-  bline(v0.x, v0.y, v1.x, v1.y, color);
+  //Vector2D sc((float)width / 2.0f, (float)height / 2.0f);
+  //Vector2D v0 = toSampleSpace(Vector2D(x0, y0), sample_rate, sc);
+  //Vector2D v1 = toSampleSpace(Vector2D(x1, y1), sample_rate, sc);
+  bline(x0, y0, x1, y1, color);
 
   // Advanced Task
   // Drawing Smooth Lines with Line Width
