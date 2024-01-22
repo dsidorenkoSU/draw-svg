@@ -92,8 +92,9 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
     // TODO implement alpha blending
     if (pbColor == bgColorU)
         pixel_color = color;
-    else 
+    else
         ref->alpha_blending_helper(pixel_color, color);
+ 
 
 	pixel_buffer[4 * (x + y * width)] = (uint8_t) (pixel_color.r * 255);
 	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pixel_color.g * 255);
@@ -432,7 +433,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
   }
 
   for ( int x = x1; x <= x2; x++ )  {
-    fill_sample(x, y, color);
+    rasterize_point(x, y, color);
     eps += dy;
     if ( (eps << 1) >= dx )  {
       y++;  eps -= dx;
