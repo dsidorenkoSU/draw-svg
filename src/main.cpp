@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <iostream>
-#include <direct.h>
+// #include <direct.h>
 
 using namespace std;
 using namespace CS248;

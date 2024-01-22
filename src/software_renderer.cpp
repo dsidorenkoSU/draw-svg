@@ -500,6 +500,29 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
   // Task 4:
   // Implement image rasterization
 
+  float x_dim = (int)floor(x1-x0); // floor 
+  float y_dim = (int)floor(y1-y0); 
+
+  int x_s = (int)floor(x0); 
+  int y_s = (int)floor(y0); 
+
+  for ( int x = x_s; x <= x_s+x_dim; x++ )  {
+      for ( int y = y_s; y <= y_s+y_dim; y++ )  {
+        float u = float(x-x_s)/(float)x_dim; 
+        float v = float(y-y_s)/(float)y_dim; 
+        Color sample_color = sampler->sample_nearest(tex, u, v, 0);
+        rasterize_point(x, y, sample_color);
+      }
+  }
+
+  // cout << x_dim << endl; 
+  // cout << y_dim << endl;
+  // cout << float(tex.mipmap[0].texels[2]) << endl;
+  // cout << float(tex.mipmap[0].texels[3]) << endl;
+
+  //rasterize_point( p.x, p.y, point.style.fillColor );
+
+
 }
 
 // resolve samples to pixel buffer

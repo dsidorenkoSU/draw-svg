@@ -85,9 +85,19 @@ Color Sampler2DImp::sample_nearest(Texture& tex,
 
   // Task 4: Implement nearest neighbour interpolation
   
-  // return magenta for invalid level
-  return Color(1,0,1,1);
+  int tex_y = int(round(v*tex.height));  // get neatest in y
+  int tex_x = int(round(u*tex.width));   // get nearest in x 
 
+  // check invalid level and return mangeta 
+  if (tex_x > tex.width || tex_y > tex.width || tex_x < 0 || tex_y < 0) {
+    return Color(1,0,1,1);
+  }
+
+  int loc = (tex_y*tex.width+tex_x)*4; // row major so do y*width, *4 because of RGBA 
+  Color c(float(tex.mipmap[level].texels[loc])/255.f, float(tex.mipmap[level].texels[loc+1])/255.f, float(tex.mipmap[level].texels[loc+2])/255.f, float(tex.mipmap[level].texels[loc+3])/255.f); 
+  // cout << c << endl;
+
+  return c;
 }
 
 Color Sampler2DImp::sample_bilinear(Texture& tex, 
@@ -95,7 +105,7 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
                                     int level) {
   
   // Task 4: Implement bilinear filtering
-
+  
   // return magenta for invalid level
   return Color(1,0,1,1);
 
