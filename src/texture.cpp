@@ -94,6 +94,8 @@ Color Sampler2DImp::sample_nearest(Texture& tex,
   }
 
   int loc = (tex_y*tex.width+tex_x)*4; // row major so do y*width, *4 because of RGBA 
+
+  // Divide 255.f because texture map store 0-255 but Color takes 0-1...no gamma correction 
   Color c(float(tex.mipmap[level].texels[loc])/255.f, float(tex.mipmap[level].texels[loc+1])/255.f, float(tex.mipmap[level].texels[loc+2])/255.f, float(tex.mipmap[level].texels[loc+3])/255.f); 
   // cout << c << endl;
 
@@ -104,10 +106,47 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
                                     float u, float v, 
                                     int level) {
   
-  // Task 4: Implement bilinear filtering
+  // Task 4: Implement bilinear filtering  
+  float tex_y = v*float(tex.height);  
+  float tex_x = u*float(tex.width);  
+
+  // check invalid level and return mangeta 
+  if (tex_x > tex.width || tex_y > tex.width || tex_x < 0 || tex_y < 0) {
+    return Color(1,0,1,1);
+  }
   
-  // return magenta for invalid level
-  return Color(1,0,1,1);
+  // calculate integer location between tex_x, text_y 
+  float x0 = floor(tex_x); 
+  float x1 = floor(tex_x)+1; 
+  float y0 = floor(tex_y); 
+  float y1 = floor(tex_y)+1; 
+
+  // calculate location in the texture 
+  int loc_x0y0 = (int(y0)*tex.width+int(x0))*4; // row major so do y*width, *4 because of RGBA 
+  int loc_x1y0 = (int(y0)*tex.width+int(x1))*4; 
+  int loc_x0y1 = (int(y1)*tex.width+int(x0))*4; 
+  int loc_x1y1 = (int(y1)*tex.width+int(x1))*4; 
+
+  // bilinear interpolation 
+  float color_interp[4] = {0, 0, 0, 0}; 
+  for (int i = 0; i < 4; i++ ) {
+    // get color 
+    float color_x0y0 = float(tex.mipmap[level].texels[loc_x0y0+i]);
+    float color_x1y0 = float(tex.mipmap[level].texels[loc_x1y0+i]);
+    float color_x0y1 = float(tex.mipmap[level].texels[loc_x0y1+i]);
+    float color_x1y1 = float(tex.mipmap[level].texels[loc_x1y1+i]);
+
+    // interpolate in x first 
+    float color_temp_y0 = (tex_x-x0)/(x1-x0)*color_x1y0 + (x1-tex_x)/(x1-x0)*color_x0y0; 
+    float color_temp_y1 = (tex_x-x0)/(x1-x0)*color_x1y1 + (x1-tex_x)/(x1-x0)*color_x0y1; 
+    // interpolate in y 
+    float color_temp = (tex_y-y0)/(y1-y0)*(color_temp_y1) + (y1-tex_y)/(y1-y0)*(color_temp_y0); 
+
+    // Divide 255.f because texture map store 0-255 but Color takes 0-1...no gamma correction 
+    color_interp[i] = color_temp/255.f; 
+  }  
+  // cout << color_interp[0] << " " << color_interp[1] << " " << color_interp[2] << " " << color_interp[3] << endl;
+  return Color(color_interp[0], color_interp[1], color_interp[2], color_interp[3]); 
 
 }
 
