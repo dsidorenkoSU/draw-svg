@@ -15,26 +15,43 @@ namespace CS248 {
 // Implements SoftwareRenderer //
 
 // fill a sample location with color
-void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
+unsigned int colorToUInt(const Color& c) {
+        unsigned int r = 255 * c.r;
+        unsigned int g = 255 * c.g;
+        g <<= 8;
+        unsigned int b = 255 * c.b;
+        b <<= 16;
+        unsigned int a = 255 * c.a;
+        a <<= 24;
+        return r | g | b | a;
+}
+
+Color unitToColor(unsigned int uc) {
+    float inv255 = 1.0 / 255.0;
+    Color pixel_color;
+    pixel_color.r = (uc & 0xFF) * inv255;
+    pixel_color.g = ( (uc>>8) & 0xFF) * inv255;
+    pixel_color.b = ((uc >> 16) & 0xFF) * inv255;
+    pixel_color.a = ((uc >> 24) & 0xFF) * inv255;
+    return pixel_color;
+}
+
+ void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
   // Task 2: implement this function
   
   // check bounds
   if (sx < 0 || sx >= width*sample_rate) return;
   if (sy < 0 || sy >= height*sample_rate) return;
 
-  Color pixel_color;
-  float inv255 = 1.0 / 255.0;
-  pixel_color.r = sample_buffer[4 * (sx + sy * width)] * inv255;
-  pixel_color.g = sample_buffer[4 * (sx + sy * width) + 1] * inv255;
-  pixel_color.b = sample_buffer[4 * (sx + sy * width) + 2] * inv255;
-  pixel_color.a = sample_buffer[4 * (sx + sy * width) + 3] * inv255;
-
+  Color pixel_color = unitToColor(sample_buffer[sx + sy * sbwidth()]);
   pixel_color = ref->alpha_blending_helper(pixel_color, color);
+  sample_buffer[sx + sy * sbwidth()] = colorToUInt(pixel_color);
+}
 
-  sample_buffer[4 * (sx + sy * width)] = (uint8_t)(pixel_color.r * 255);
-  sample_buffer[4 * (sx + sy * width) + 1] = (uint8_t)(pixel_color.g * 255);
-  sample_buffer[4 * (sx + sy * width) + 2] = (uint8_t)(pixel_color.b * 255);
-  sample_buffer[4 * (sx + sy * width) + 3] = (uint8_t)(pixel_color.a * 255);
+void SoftwareRendererImp::set_sample(int sx, int sy, const Color& color)
+{
+    unsigned int uc = colorToUInt(color);
+    sample_buffer[sx + sy * sbwidth()] = uc;
 }
 
 // fill samples in the entire pixel specified by pixel coordinates
@@ -58,7 +75,7 @@ void SoftwareRendererImp::draw_svg( SVG& svg ) {
 
   // set top level transformation
   // cout << transformation << "trans" << endl;
-
+  //cout << "Starting draw svg" << endl;
   transformation = canvas_to_screen; // this is 3x3 matrix, initially transformation is identity 
 
   // canvas outline
@@ -93,7 +110,7 @@ void SoftwareRendererImp::set_sample_rate( size_t sample_rate ) {
   // Task 2:
   // You may want to modify this for supersampling support
   this->sample_rate = sample_rate;
-  sample_buffer.resize(4 * width * height * sample_rate * sample_rate);
+  sample_buffer.resize(width * height * sample_rate * sample_rate);
   fill_sample_buffer(bgColor);
 }
 
@@ -101,7 +118,7 @@ void SoftwareRendererImp::fill_sample_buffer(const Color& c)
 {
     for (int x = 0; x < width * sample_rate; ++x) {
         for (int y = 0; y < height * sample_rate; ++y) {
-            fill_sample(x, y, c);
+            set_sample(x, y, c);
         }
     }
 }
@@ -114,7 +131,7 @@ void SoftwareRendererImp::set_pixel_buffer( unsigned char* pixel_buffer,
   this->pixel_buffer = pixel_buffer;
   this->width = width;
   this->height = height;
-  sample_buffer.resize(4 * width * height * sample_rate * sample_rate);
+  sample_buffer.resize(width * height * sample_rate * sample_rate);
   fill_sample_buffer(bgColor);
 }
 
@@ -128,7 +145,7 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
   Matrix3x3 transformation_g = transformation0.operator*(element->transform); // multiply transform together 
   transformation = canvas_to_screen.operator*(transformation_g); // respect to canvas_to_screen
   // cout << transformation << "trans" << endl;
-
+  //cout <<"Drawing: "<< element->type << std::endl;
 	switch (element->type) {
 	case POINT:
 		draw_point(static_cast<Point&>(*element));
@@ -503,7 +520,7 @@ void SoftwareRendererImp::drawTriImpl(float x0, float y0,
     calcABC(pt0, pt1, pt2, l0);
     calcABC(pt1, pt2, pt0, l1);
     calcABC(pt2, pt0, pt1, l2);
-    
+    //cout << "minX:" << (int)min.x << " minY:" << (int)min.y << " maxX:" << (int)max.x << " maxY:" << (int)max.y << endl;
     // Drawing triangle samples in the sample space 
     for (float x = (int)min.x; x < max.x; x += 1.0f)
     {
@@ -543,19 +560,16 @@ void SoftwareRendererImp::resolve( void ) {
 
   // Task 2:
   // Implement supersampling
-    for (int x = 0; x < width; ++x)
+    for (int x = 0 /*svg_bbox_top_left.x*/; x < width/*svg_bbox_bottom_right.x*/; ++x)
     {
-        for (int y = 0; y < height; ++y)
+        for (int y = 0/*svg_bbox_top_left.y*/; y < height /*svg_bbox_bottom_right.y*/; ++y)
         {
             Color pc;
             for (int xS = x * sample_rate; xS < (x + 1) * sample_rate; ++xS)
             {
                 for (int yS = y * sample_rate; yS < (y + 1) * sample_rate; ++yS)
                 {
-                    Color c((float)sample_buffer[4 * (xS + yS * width)] / 255.0f,
-                        (float)sample_buffer[4 * (xS + yS * width) + 1] / 255.0f,
-                        (float)sample_buffer[4 * (xS + yS * width) + 2] / 255.0f,
-                        (float)sample_buffer[4 * (xS + yS * width) + 3] / 255.0f);
+                    Color c = unitToColor(sample_buffer[xS + yS * sbwidth()]);
                     c *= 1.0f / (float)(sample_rate * sample_rate);
                     pc += c;
                 }
@@ -563,26 +577,6 @@ void SoftwareRendererImp::resolve( void ) {
             fill_pixel(x, y, pc);
         }
     }
-
-  /*for (int sX = 0; sX < width * sample_rate; sX += sample_rate) {
-      for (int sY = 0; sY < height*sample_rate; sY += sample_rate) {
-          Color pc;
-          for (int dX = 0; dX < sample_rate; ++dX) {
-              for (int dY = 0; dY < sample_rate; ++dY) {
-                  
-                  Color c((float)sample_buffer[4 * (sX+dX + (sY+dY) * width)] / 255.0f,
-                      (float)sample_buffer[4 * (sX + dX + (sY + dY) * width) + 1] / 255.0f,
-                      (float)sample_buffer[4 * (sX + dX + (sY + dY) * width) + 2] / 255.0f,
-                      (float)sample_buffer[4 * (sX + dX + (sY + dY) * width) + 3] / 255.0f);
-                  c *= 1.0f / (float)(sample_rate * sample_rate);
-                  pc += c;
-              }
-          }
-          int x = sX / sample_rate;
-          int y = sY / sample_rate;
-          fill_pixel(x, y, pc);
-      }
-  }*/
 
   fill_sample_buffer(bgColor);
 

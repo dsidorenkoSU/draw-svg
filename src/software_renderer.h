@@ -43,7 +43,8 @@ class SoftwareRenderer : public SVGRenderer {
 
   // Clear pixel buffer
   inline void clear_buffer() {
-    memset(pixel_buffer, 255, 4 * width * height);
+	  //onClearBuffer();
+	  memset(pixel_buffer, 255, 4 * width * height);
   }
 
   // Set texture sampler
@@ -57,6 +58,8 @@ class SoftwareRenderer : public SVGRenderer {
   }
 
  protected:
+
+  virtual void onClearBuffer() {}
 
   // Sample rate (square root of samples per pixel)
   size_t sample_rate;
@@ -97,7 +100,13 @@ public:
 		size_t width, size_t height);
 
 	void fill_sample(int sx, int sy, const Color& color);
+
 	void fill_pixel(int x, int y, const Color& color);
+protected: 
+	
+	virtual void onClearBuffer() {
+		memset(&sample_buffer[0], 255, 4 * width * height * sample_rate * sample_rate);
+	}
 
 private:
 
@@ -143,6 +152,8 @@ private:
 	void rasterize_line(float x0, float y0,
 		float x1, float y1,
 		Color color);
+	
+	void set_sample(int sx, int sy, const Color& color);
 
 	// rasterize a triangle implementation
 	void drawTriImpl(float x0, float y0,
@@ -163,15 +174,18 @@ private:
 
 	// resolve samples to pixel buffer
 	void resolve(void);
+	inline int sbwidth() const { return width * sample_rate; }
 
 	// task5 alpha compositing
 	Color alpha_blending(Color pixel_color, Color color);
 
 	// SSAA sample buffer
-	std::vector<unsigned char> sample_buffer;
+	std::vector<unsigned int> sample_buffer;
 	Color bgColor;
 
 	SoftwareRendererRef *ref;
+	Vector2D min;
+	Vector2D max;
 }; // class SoftwareRendererImp
 
 
