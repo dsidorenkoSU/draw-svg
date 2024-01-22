@@ -410,6 +410,19 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
   }
 }
 
+Vector2D toSampleSpace(const Vector2D& pt, float sample_rate, const Vector2D& sc)
+{
+    Vector2D vc = (pt - sc) * sample_rate;
+
+    return Vector2D(vc.x + sc.x * sample_rate, vc.y + sc.y * sample_rate);
+}
+
+Vector3D toSampleSpace(const Vector3D& vec, float sample_rate, const Vector2D& sc)
+{
+    Vector2D ss = toSampleSpace(Vector2D(vec.x, vec.y), sample_rate, sc);
+    return Vector3D(ss.x, ss.y, 1.0f);
+}
+
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
                                           float x1, float y1,
                                           Color color) {
@@ -426,10 +439,10 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
     swap(y1, y0);
   }
 
-  /*float dx  = x1 - x0;
-  float dy  = y1 - y0;
-  */
-  bline(x0, y0, x1, y1, color);
+  Vector2D sc((float)width / 2.0f, (float)height / 2.0f);
+  Vector2D v0 = toSampleSpace(Vector2D(x0, y0), sample_rate, sc);
+  Vector2D v1 = toSampleSpace(Vector2D(x1, y1), sample_rate, sc);
+  bline(v0.x, v0.y, v1.x, v1.y, color);
 
   // Advanced Task
   // Drawing Smooth Lines with Line Width
@@ -472,19 +485,6 @@ bool isInsideTri(float x, float y, const Vector3D& l0, const Vector3D& l1, const
 {
     Vector3D pxC(x, y, 1.0f);
     return dot(l0, pxC) <= 0.0f && dot(l1, pxC) <= 0.0f && dot(l2, pxC) <= 0.0f;
-}
-
-Vector2D toSampleSpace(const Vector2D& pt, float sample_rate, const Vector2D& sc)
-{
-    Vector2D vc = (pt - sc) * sample_rate;
-
-    return Vector2D(vc.x + sc.x * sample_rate, vc.y + sc.y * sample_rate);
-}
-
-Vector3D toSampleSpace(const Vector3D& vec, float sample_rate, const Vector2D& sc) 
-{
-    Vector2D ss = toSampleSpace(Vector2D(vec.x, vec.y), sample_rate, sc);
-    return Vector3D(ss.x, ss.y, 1.0f);
 }
 
 Vector2D toScreenSpace(const Vector2D& vec, float sample_rate)
