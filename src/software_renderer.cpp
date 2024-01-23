@@ -35,7 +35,8 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 	pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
 	pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
 
-	pixel_color = ref->alpha_blending_helper(pixel_color, color);
+	//pixel_color = ref->alpha_blending_helper(pixel_color, color);
+	pixel_color = alpha_blending(pixel_color, color);
 
 	pixel_buffer[4 * (x + y * width)] = (uint8_t)(pixel_color.r * 255);
 	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pixel_color.g * 255);
@@ -281,10 +282,12 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
 
   // fill sample - NOT doing alpha blending!
   // TODO: Call fill_pixel here to run alpha blending
-  pixel_buffer[4 * (sx + sy * width)] = (uint8_t)(color.r * 255);
-  pixel_buffer[4 * (sx + sy * width) + 1] = (uint8_t)(color.g * 255);
-  pixel_buffer[4 * (sx + sy * width) + 2] = (uint8_t)(color.b * 255);
-  pixel_buffer[4 * (sx + sy * width) + 3] = (uint8_t)(color.a * 255);
+  
+  fill_pixel(x, y, color);
+  // pixel_buffer[4 * (sx + sy * width)] = (uint8_t)(color.r * 255);
+  // pixel_buffer[4 * (sx + sy * width) + 1] = (uint8_t)(color.g * 255);
+  // pixel_buffer[4 * (sx + sy * width) + 2] = (uint8_t)(color.b * 255);
+  // pixel_buffer[4 * (sx + sy * width) + 3] = (uint8_t)(color.a * 255);
 
 }
 
@@ -531,7 +534,15 @@ Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
 {
   // Task 5
   // Implement alpha compositing
-  return pixel_color;
+
+  Color blend_c(0, 0, 0, 0); // pixel color is the canvas, color is element 
+
+  blend_c.a = 1 - (1-color.a)*(1-pixel_color.a); // Ca' = 1 - (1 - Ea) * (1 - Ca)
+  blend_c.r = (1 - color.a)*pixel_color.r+color.r; // Cr' = (1 - Ea) * Cr + Er
+  blend_c.g = (1 - color.a)*pixel_color.g+color.g;
+  blend_c.b = (1 - color.a)*pixel_color.b+color.b;
+
+  return blend_c;
 }
 
 
