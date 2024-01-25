@@ -147,16 +147,30 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
   // calculate integer location surrounding tex_x, text_y 
   float x0 = floor(tex_x); 
   float x1 = floor(tex_x)+1.0; 
-  x1 = (x1 > tex.width-1.0) ? x0 : x1;  
   float y0 = floor(tex_y); 
   float y1 = floor(tex_y)+1.0; 
-  y1 = (y1 > tex.height-1.0) ? y0 : y1;  
 
   // calculate location in the texture 
   int loc_x0y0 = (int(y0)*tex.width+int(x0))*4; // row major so do y*width+x, *4 because of RGBA 
-  int loc_x1y0 = (int(y0)*tex.width+int(x1))*4; 
-  int loc_x0y1 = (int(y1)*tex.width+int(x0))*4; 
-  int loc_x1y1 = (int(y1)*tex.width+int(x1))*4; 
+  int loc_x1y0 = (x1 > tex.width-1.0) ? loc_x0y0 : (int(y0)*tex.width+int(x1))*4; 
+  int loc_x0y1 = (y1 > tex.height-1.0) ? loc_x0y0 : (int(y1)*tex.width+int(x0))*4; 
+  int loc_x1y1 = 0; 
+  
+  if (x1 > tex.width-1.0) { 
+    if (y1 > tex.height-1.0) {
+      loc_x1y1 = loc_x0y0;
+    } else {
+      loc_x1y1 = loc_x0y1;
+    }
+  } else {
+    if (y1 > tex.height-1.0) {
+      loc_x1y1 = loc_x1y0;
+    }
+    else {
+      loc_x1y1 = (int(y1)*tex.width+int(x1))*4; 
+    }
+  }
+                                    
 
   // bilinear interpolation 
   float color_interp[4] = {0, 0, 0, 0}; 
