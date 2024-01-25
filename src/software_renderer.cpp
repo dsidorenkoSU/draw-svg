@@ -64,7 +64,8 @@ Vector3D toSampleSpace(const Vector3D& vec, float sample_rate, const Vector2D& s
   Color pixel_color = unitToColor(sample_buffer[sx + sy * sbwidth()]);
   pixel_color = alpha_blending(pixel_color, color);
   set_sample(sx, sy, pixel_color);
-}
+  //set_sample(sx, sy, color);
+ }
 
 void SoftwareRendererImp::set_sample(int sx, int sy, const Color& color)
 {
@@ -81,7 +82,6 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 	if (x < 0 || x >= width) return;
 	if (y < 0 || y >= height) return;
 
-    Color pc;
     for (int xS = x * sample_rate; xS < (x + 1) * sample_rate; ++xS)
     {
         for (int yS = y * sample_rate; yS < (y + 1) * sample_rate; ++yS)
@@ -365,11 +365,14 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
     {
       int x = x1;
       for ( int y = y1; y <= y2; y++ )  {
-      rasterize_point(x, y, color);
-      eps += dx;
-      if ( (eps << 1) >= dy )  {
-        x++;  eps -= dy;
-      }
+          
+          rasterize_point(x, y, color);
+          int dt = (eps << 1) >= dy ? -1 : 1;
+          //rasterize_point(x+dt, y, color);
+          eps += dx;
+          if ( (eps << 1) >= dy )  {
+            x++;  eps -= dy;
+          }
       }
       return;
     } else 
@@ -391,6 +394,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
       float e = 0.0f;
       float y = y1;
       float m = s;
+      
       for ( int x = x1; x <= x2; x++ )  {
         rasterize_point(x, y, color);
         if (e+m > -0.5f)
@@ -595,28 +599,30 @@ void SoftwareRendererImp::resolve( void ) {
     {
         for (int y = 0/*svg_bbox_top_left.y*/; y < height /*svg_bbox_bottom_right.y*/; ++y)
         {
-            Color pc;
+            Color pc(0.0f, 0.0f, 0.0f, 0.0f);
             for (int xS = x * sample_rate; xS < (x + 1) * sample_rate; ++xS)
             {
                 for (int yS = y * sample_rate; yS < (y + 1) * sample_rate; ++yS)
                 {
+                    
                     Color c = unitToColor(sample_buffer[xS + yS * sbwidth()]);
                     c *= 1.0f / (float)(sample_rate * sample_rate);
+                    
                     pc += c;
                 }
             }
             
-            Color pixel_color;
-            float inv255 = 1.0 / 255.0;
-            pixel_color.r = pixel_buffer[4 * (x + y * width)] * inv255;
-            pixel_color.g = pixel_buffer[4 * (x + y * width) + 1] * inv255;
-            pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
-            pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
-            Color rc = alpha_blending(pixel_color, pc);
-            pixel_buffer[4 * (x + y * width)] = (uint8_t)(rc.r * 255);
-            pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(rc.g * 255);
-            pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(rc.b * 255);
-            pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(rc.a * 255);
+            //Color pixel_color;
+            //float inv255 = 1.0 / 255.0;
+            //pixel_color.r = pixel_buffer[4 * (x + y * width)] * inv255;
+            //pixel_color.g = pixel_buffer[4 * (x + y * width) + 1] * inv255;
+            //pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
+            //pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
+            //Color rc = alpha_blending(pixel_color, pc);
+            pixel_buffer[4 * (x + y * width)] = (uint8_t)(pc.r * 255);
+            pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pc.g * 255);
+            pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(pc.b * 255);
+            pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(pc.a * 255);
         }
     }
 

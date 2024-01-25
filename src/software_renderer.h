@@ -86,7 +86,7 @@ class SoftwareRendererImp : public SoftwareRenderer {
 public:
 
 	SoftwareRendererImp(SoftwareRendererRef *ref = NULL) : SoftwareRenderer(), ref(ref) { 
-		bgColor = Color(0.0f, 1.0f, 0.0f, 0.0f);
+		bgColor = Color(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
 	// draw an svg input to pixel buffer
