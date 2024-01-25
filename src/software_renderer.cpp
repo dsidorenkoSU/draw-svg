@@ -652,12 +652,7 @@ Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
   blend_c.r = (1 - color.a)*pixel_color.r+color.r; // Cr' = (1 - Ea) * Cr + Er
   blend_c.g = (1 - color.a)*pixel_color.g+color.g;
   blend_c.b = (1 - color.a)*pixel_color.b+color.b;
-
-  // // color are premultipled alpha. 
-  // blend_c.r = (1 - pixel_color.a)*color.r+pixel_color.r; // Cr' = (1 - Ea) * Cr + Er
-  // blend_c.g = (1 - pixel_color.a)*color.g+pixel_color.g;
-  // blend_c.b = (1 - pixel_color.a)*color.b+pixel_color.b;
-
+  
   return blend_c;
 }
 
