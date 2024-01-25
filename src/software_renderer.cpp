@@ -579,9 +579,9 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
 
   for ( int x = x_s; x <= x1; x++ )  { 
       for ( int y = y_s; y <= y1; y++ )  {
-        float u = float(x-x_s)/(x1-x0); // calculate location on texture, always > 0...but can be larger than 1 
-        float v = float(y-y_s)/(y1-y0); 
-        // Color sample_color = sampler->sample_nearest(tex, u, v, 0); // sampe nearest
+        float u = (float(x)-x0)/(x1-x0); // calculate location on texture
+        float v = (float(y)-y0)/(y1-y0); 
+        //Color sample_color = sampler->sample_nearest(tex, u, v, 0); // sampe nearest
         Color sample_color = sampler->sample_bilinear(tex, u, v, 0); // sample bilinear 
         rasterize_point(x, y, sample_color);
       }
@@ -652,7 +652,7 @@ Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
   blend_c.r = (1 - color.a)*pixel_color.r+color.r; // Cr' = (1 - Ea) * Cr + Er
   blend_c.g = (1 - color.a)*pixel_color.g+color.g;
   blend_c.b = (1 - color.a)*pixel_color.b+color.b;
-  
+
   return blend_c;
 }
 
