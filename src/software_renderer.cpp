@@ -444,12 +444,11 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
 
   // Task 0:
   // Implement Bresenham's algorithm (delete the line below and implement your own)
-  //ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
+  ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
   
-  
+  /* decomment below for our task 0 impelemntation. 
   float dx = x1 - x0;
   float dy = y1 - y0;
-  //std::cout<<"x0:"<<x0<<" y0:"<<y0<<" x1:"<<x1<<" y1:"<<y1<<"s: "<<dy/dx <<std::endl;
 
   if (x1 < x0) {
     swap(x1, x0);
@@ -460,6 +459,9 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   //Vector2D v0 = toSampleSpace(Vector2D(x0, y0), sample_rate, sc);
   //Vector2D v1 = toSampleSpace(Vector2D(x1, y1), sample_rate, sc);
   bline(x0, y0, x1, y1, color);
+
+  */
+
 
   // Advanced Task
   // Drawing Smooth Lines with Line Width
