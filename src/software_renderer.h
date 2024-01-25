@@ -143,6 +143,10 @@ private:
 
 	void bline(unsigned x1, unsigned y1,
           unsigned x2, unsigned y2, Color color);
+	
+	void XiaolinWuLine(float x1, float y1,
+		float x2, float y2, Color color);
+
 	// Rasterization //
 
 	// rasterize a point

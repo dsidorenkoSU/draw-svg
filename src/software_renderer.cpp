@@ -1,10 +1,10 @@
-#include "software_renderer.h"
+﻿#include "software_renderer.h"
 
 #include <cmath>
 #include <vector>
 #include <iostream>
 #include <algorithm>
-
+#include <cmath>
 #include "triangulation.h"
 
 using namespace std;
@@ -350,6 +350,117 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   fill_pixel(x, y, color);
 }
 
+//function plot(x, y, c) is
+//plot the pixel at(x, y) with brightness c(where 0 ≤ c ≤ 1)
+
+// integer part of x
+int ipart(float x) {
+    return floor(x);
+} 
+
+int round(float x) {
+    return ipart(x + 0.5);
+}
+
+// fractional part of x
+float fpart(float x) {
+    return x - ipart(x);
+}
+
+float rfpart(float x) {
+    return 1 - fpart(x);
+}
+
+void SoftwareRendererImp::XiaolinWuLine(float x1, float y1,
+    float x2, float y2, Color color) {
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+
+    // Iterating over the longest delta
+    if (fabs(dx) > fabs(dy))
+    {
+        if (x2 < x1)
+        {
+            swap(x1, x2);
+            swap(y1, y2);
+        }
+
+        float gradient = dy / dx;
+        float xend = (float)round(x1);
+        float yend = y1 + gradient * (xend - x1);
+        float xgap = rfpart(x1 + 0.5f);
+
+        int xpxl1 = (int)xend;
+        int ypxl1 = ipart(yend);
+
+        // Add the first endpoint
+        fill_pixel(xpxl1, ypxl1, rfpart(yend)* xgap* color);
+        fill_pixel(xpxl1, ypxl1 + 1, fpart(yend) * xgap* color);
+
+        float intery = yend + gradient;
+
+        xend = (float)(round(x2));
+        yend = y2 + gradient * (xend - x2);
+        xgap = fpart(x2 + 0.5f);
+
+        int xpxl2 = (int)xend;
+        int ypxl2 = ipart(yend);
+
+        // Add the second endpoint
+        fill_pixel(xpxl2, ypxl2, rfpart(yend) * xgap* color);
+        fill_pixel(xpxl2, ypxl2 + 1, fpart(yend) * xgap* color);
+
+        // Add all the points between the endpoints
+        for (int x = xpxl1 + 1; x <= xpxl2 - 1; ++x)
+        {
+            fill_pixel(x, ipart(intery), rfpart(intery) * color);
+            fill_pixel(x, ipart(intery) + 1, fpart(intery) * color);
+            intery += gradient;
+        }
+    }
+    else
+    {
+        if (y2 < y1)
+        {
+            std::swap(x1, x2);
+            std::swap(y1, y2);
+        }
+
+        float gradient = dx / dy;
+        float yend = (float)round(y1);
+        float xend = x1 + gradient * (yend - y1);
+        float ygap = rfpart(y1 + 0.5f);
+
+        int ypxl1 = (int)yend;
+        int xpxl1 = ipart(xend);
+
+        // Add the first endpoint
+        fill_pixel(xpxl1, ypxl1, rfpart(xend) * ygap * color);
+        fill_pixel(xpxl1, ypxl1 + 1, fpart(xend) * ygap * color);
+
+        float interx = xend + gradient;
+
+        yend = (float)round(y2);
+        xend = x2 + gradient * (yend - y2);
+        ygap = fpart(y2 + 0.5f);
+
+        int ypxl2 = (int)yend;
+        int xpxl2 = ipart(xend);
+
+        // Add the second endpoint
+        fill_pixel(xpxl2, ypxl2, rfpart(xend) * ygap * color);
+        fill_pixel(xpxl2, ypxl2 + 1, fpart(xend) * ygap * color);
+
+        // Add all the points between the endpoints
+        for (int y = ypxl1 + 1; y <= ypxl2 - 1; ++y)
+        {
+            fill_pixel(ipart(interx), y, rfpart(interx) * color);
+            fill_pixel(ipart(interx) + 1, y, fpart(interx) * color);
+            interx += gradient;
+        }
+    }
+}
+
 void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
           unsigned x2, unsigned y2, Color color)
 {
@@ -365,7 +476,7 @@ void SoftwareRendererImp::bline(unsigned x1, unsigned y1,
     {
       int x = x1;
       for ( int y = y1; y <= y2; y++ )  {
-          
+          cout << eps << endl;
           rasterize_point(x, y, color);
           int dt = (eps << 1) >= dy ? -1 : 1;
           //rasterize_point(x+dt, y, color);
@@ -443,28 +554,27 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
                                           Color color) {
 
   // Task 0:
-  // Implement Bresenham's algorithm (delete the line below and implement your own)
-  ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
+  // Implemented Bresenham algorithm 
+  // Uncomment lines below to draw standard Brezenham
   
-  /* decomment below for our task 0 impelemntation. 
-  float dx = x1 - x0;
-  float dy = y1 - y0;
+  // dx = x1 - x0;
+  //float dy = y1 - y0;
+  //std::cout<<"x0:"<<x0<<" y0:"<<y0<<" x1:"<<x1<<" y1:"<<y1<<"s: "<<dy/dx <<std::endl;
 
-  if (x1 < x0) {
-    swap(x1, x0);
-    swap(y1, y0);
-  }
+  //if (x1 < x0) {
+  //  swap(x1, x0);
+  //  swap(y1, y0);
+  //}
 
   //Vector2D sc((float)width / 2.0f, (float)height / 2.0f);
   //Vector2D v0 = toSampleSpace(Vector2D(x0, y0), sample_rate, sc);
   //Vector2D v1 = toSampleSpace(Vector2D(x1, y1), sample_rate, sc);
-  bline(x0, y0, x1, y1, color);
-
-  */
+  //bline(x0, y0, x1, y1, color);
 
 
   // Advanced Task
   // Drawing Smooth Lines with Line Width
+  XiaolinWuLine(x0, y0, x1, y1, color);
 }
 
 void calcBoudingRect(const std::vector<Vector3D>& v, 
@@ -597,9 +707,9 @@ void SoftwareRendererImp::resolve( void ) {
 
   // Task 2:
   // Implement supersampling
-    for (int x = 0 /*svg_bbox_top_left.x*/; x < width/*svg_bbox_bottom_right.x*/; ++x)
+    for (int x = 0; x < width; ++x)
     {
-        for (int y = 0/*svg_bbox_top_left.y*/; y < height /*svg_bbox_bottom_right.y*/; ++y)
+        for (int y = 0; y < height ; ++y)
         {
             Color pc(0.0f, 0.0f, 0.0f, 0.0f);
             for (int xS = x * sample_rate; xS < (x + 1) * sample_rate; ++xS)
