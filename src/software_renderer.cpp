@@ -17,6 +17,7 @@ namespace CS248 {
 // pack color to uint 
 unsigned int colorToUInt(const Color& c) {
         unsigned int r = 255 * c.r;
+        r = r & 0xff;
         unsigned int g = 255 * c.g;
         g <<= 8;
         unsigned int b = 255 * c.b;
@@ -60,9 +61,9 @@ Vector3D toSampleSpace(const Vector3D& vec, float sample_rate, const Vector2D& s
   if (sx < 0 || sx >= width*sample_rate) return;
   if (sy < 0 || sy >= height*sample_rate) return;
 
-  //Color pixel_color = unitToColor(sample_buffer[sx + sy * sbwidth()]);
-  //pixel_color = ref->alpha_blending_helper(pixel_color, color);
-  sample_buffer[sx + sy * sbwidth()] = colorToUInt(color);
+  Color pixel_color = unitToColor(sample_buffer[sx + sy * sbwidth()]);
+  pixel_color = alpha_blending(pixel_color, color);
+  set_sample(sx, sy, pixel_color);
 }
 
 void SoftwareRendererImp::set_sample(int sx, int sy, const Color& color)
@@ -80,28 +81,17 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 	if (x < 0 || x >= width) return;
 	if (y < 0 || y >= height) return;
 
-    Color pixel_color;
-    float inv255 = 1.0 / 255.0;
-    pixel_color.r = pixel_buffer[4 * (x + y * width)] * inv255;
-    pixel_color.g = pixel_buffer[4 * (x + y * width) + 1] * inv255;
-    pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
-    pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
-    unsigned int pbColor = colorToUInt(pixel_color);
-    unsigned int bgColorU = colorToUInt(bgColor);
-
-    // TODO implement alpha blending
-    if (pbColor == bgColorU)
-      pixel_color = color; 
-    else
-      ref->alpha_blending_helper(pixel_color, color);
-      //pixel_color = alpha_blending(pixel_color, color);
-
-
-	pixel_buffer[4 * (x + y * width)] = (uint8_t) (pixel_color.r * 255);
-	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pixel_color.g * 255);
-	pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(pixel_color.b * 255);
-	pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(pixel_color.a * 255);
-
+    Color pc;
+    for (int xS = x * sample_rate; xS < (x + 1) * sample_rate; ++xS)
+    {
+        for (int yS = y * sample_rate; yS < (y + 1) * sample_rate; ++yS)
+        {
+            fill_sample(xS, yS, color);
+            //Color c = unitToColor(sample_buffer[xS + yS * sbwidth()]);
+            //Color cr = alpha_blending(c, color);
+            //sample_buffer[xS + yS * sbwidth()] = colorToUInt(color);
+        }
+    }
 }
 
 void SoftwareRendererImp::draw_svg( SVG& svg ) {
@@ -615,7 +605,18 @@ void SoftwareRendererImp::resolve( void ) {
                     pc += c;
                 }
             }
-            fill_pixel(x, y, pc);
+            
+            Color pixel_color;
+            float inv255 = 1.0 / 255.0;
+            pixel_color.r = pixel_buffer[4 * (x + y * width)] * inv255;
+            pixel_color.g = pixel_buffer[4 * (x + y * width) + 1] * inv255;
+            pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
+            pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
+            Color rc = alpha_blending(pixel_color, pc);
+            pixel_buffer[4 * (x + y * width)] = (uint8_t)(rc.r * 255);
+            pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(rc.g * 255);
+            pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(rc.b * 255);
+            pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(rc.a * 255);
         }
     }
 
