@@ -91,10 +91,11 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 
     // TODO implement alpha blending
     if (pbColor == bgColorU)
-        pixel_color = color;
+      pixel_color = color; 
     else
-        ref->alpha_blending_helper(pixel_color, color);
- 
+      ref->alpha_blending_helper(pixel_color, color);
+      //pixel_color = alpha_blending(pixel_color, color);
+
 
 	pixel_buffer[4 * (x + y * width)] = (uint8_t) (pixel_color.r * 255);
 	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pixel_color.g * 255);
@@ -450,6 +451,8 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // Task 0:
   // Implement Bresenham's algorithm (delete the line below and implement your own)
   //ref->rasterize_line_helper(x0, y0, x1, y1, width, height, color, this);
+  
+  
   float dx = x1 - x0;
   float dy = y1 - y0;
   //std::cout<<"x0:"<<x0<<" y0:"<<y0<<" x1:"<<x1<<" y1:"<<y1<<"s: "<<dy/dx <<std::endl;
@@ -626,7 +629,27 @@ Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
 {
   // Task 5
   // Implement alpha compositing
-  return pixel_color;
+
+  Color blend_c(0, 0, 0, 0); // pixel color is the canvas, color is element 
+
+  blend_c.a = 1 - (1-color.a)*(1-pixel_color.a); // Ca' = 1 - (1 - Ea) * (1 - Ca)
+
+  // non-premultipled alphas
+  // blend_c.r = (1 - color.a)*pixel_color.r*pixel_color.a+color.r*color.a; // Cr' = (1 - Ea) * Cr + Er
+  // blend_c.g = (1 - color.a)*pixel_color.g*pixel_color.a+color.g*color.a;
+  // blend_c.b = (1 - color.a)*pixel_color.b*pixel_color.a+color.b*color.a;
+
+  // color are premultipled alpha. 
+  blend_c.r = (1 - color.a)*pixel_color.r+color.r; // Cr' = (1 - Ea) * Cr + Er
+  blend_c.g = (1 - color.a)*pixel_color.g+color.g;
+  blend_c.b = (1 - color.a)*pixel_color.b+color.b;
+
+  // // color are premultipled alpha. 
+  // blend_c.r = (1 - pixel_color.a)*color.r+pixel_color.r; // Cr' = (1 - Ea) * Cr + Er
+  // blend_c.g = (1 - pixel_color.a)*color.g+pixel_color.g;
+  // blend_c.b = (1 - pixel_color.a)*color.b+pixel_color.b;
+
+  return blend_c;
 }
 
 
