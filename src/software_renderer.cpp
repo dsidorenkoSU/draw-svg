@@ -538,10 +538,16 @@ Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
   Color blend_c(0, 0, 0, 0); // pixel color is the canvas, color is element 
 
   blend_c.a = 1 - (1-color.a)*(1-pixel_color.a); // Ca' = 1 - (1 - Ea) * (1 - Ca)
+
+  // non-premultipled alphas
+  // blend_c.r = (1 - color.a)*pixel_color.r*pixel_color.a+color.r*color.a; // Cr' = (1 - Ea) * Cr + Er
+  // blend_c.g = (1 - color.a)*pixel_color.g*pixel_color.a+color.g*color.a;
+  // blend_c.b = (1 - color.a)*pixel_color.b*pixel_color.a+color.b*color.a;
+
+  // color are premultipled alpha. 
   blend_c.r = (1 - color.a)*pixel_color.r+color.r; // Cr' = (1 - Ea) * Cr + Er
   blend_c.g = (1 - color.a)*pixel_color.g+color.g;
   blend_c.b = (1 - color.a)*pixel_color.b+color.b;
-
   return blend_c;
 }
 
