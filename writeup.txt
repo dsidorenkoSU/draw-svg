@@ -1,0 +1,18 @@
+Names: 
+- Dmitrii Sidorenko SUnetID: 
+- Ting Chia (Jerry) Chang SunetID: tcchang3
+
+Work: 
+- Task 0-2 mainly by Dmitrii
+- Task 3-6 mainly by Jerry
+- extra credit by 
+
+Description: 
+- Task 0: implement Bresenham's algorithm, but commented out to use helper function rasterize_line_helper() ??
+- Task 1:
+- Task 2:
+- Task 3: in addition to draw_element, also modify draw_svg function to reset "transformation" to identity matrix before each draw_elment call
+- Task 4: implement both nearest and bilinear, submitted code has bilinear 
+- Task 5: N/A 
+- Task 6: create SVG in Inkscape and convert path to polygon. It includes group, alpha. 
+- extra credit: ?? 
