@@ -31,6 +31,10 @@ class SoftwareRenderer : public SVGRenderer {
   // Free used resources
   virtual ~SoftwareRenderer( ) { }
 
+  void toggle_line_algorithm() {
+	  //line_algorithm == 0 ? 1 : 0;
+  }
+
   // Draw an svg input to pixel buffer
   virtual void draw_svg( SVG& svg ) = 0;
 
@@ -58,6 +62,7 @@ class SoftwareRenderer : public SVGRenderer {
   }
 
  protected:
+  //int line_algorithm = 0; // line algorithm 0 - XiaolinWuLine, 1 - Brezenham
 
   virtual void onClearBuffer() {}
 
@@ -88,6 +93,8 @@ public:
 	SoftwareRendererImp(SoftwareRendererRef *ref = NULL) : SoftwareRenderer(), ref(ref) { 
 		bgColor = Color(1.0f, 1.0f, 1.0f, 1.0f);
 	}
+
+	
 
 	// draw an svg input to pixel buffer
 	void draw_svg(SVG& svg);
@@ -190,7 +197,7 @@ private:
 
 	SoftwareRendererRef *ref;
 	Vector2D min;
-	Vector2D max;
+	Vector2D max; 
 }; // class SoftwareRendererImp
 
 

@@ -556,25 +556,21 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // Task 0:
   // Implemented Bresenham algorithm 
   // Uncomment lines below to draw standard Brezenham
-  
-  // dx = x1 - x0;
-  //float dy = y1 - y0;
-  //std::cout<<"x0:"<<x0<<" y0:"<<y0<<" x1:"<<x1<<" y1:"<<y1<<"s: "<<dy/dx <<std::endl;
+  /*if (line_algorithm == 1) {
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    
+    if (x1 < x0) {
+      swap(x1, x0);
+      swap(y1, y0);
+    }
 
-  //if (x1 < x0) {
-  //  swap(x1, x0);
-  //  swap(y1, y0);
-  //}
-
-  //Vector2D sc((float)width / 2.0f, (float)height / 2.0f);
-  //Vector2D v0 = toSampleSpace(Vector2D(x0, y0), sample_rate, sc);
-  //Vector2D v1 = toSampleSpace(Vector2D(x1, y1), sample_rate, sc);
-  //bline(x0, y0, x1, y1, color);
-
-
-  // Advanced Task
-  // Drawing Smooth Lines with Line Width
+    bline(x0, y0, x1, y1, color);
+  */
+    
+  // XiaolinWu algorithm
   XiaolinWuLine(x0, y0, x1, y1, color);
+  //}
 }
 
 void calcBoudingRect(const std::vector<Vector3D>& v, 

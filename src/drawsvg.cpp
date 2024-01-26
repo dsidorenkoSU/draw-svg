@@ -169,6 +169,10 @@ void DrawSVG::char_event( unsigned int key ) {
       show_zoom = !show_zoom;
       break;
 
+    // toggle line algorithm
+    case 'l': case 'L':
+      software_renderer_imp->toggle_line_algorithm();
+      break;
     // tab selection
     case '0':
       setTab( 9 );
